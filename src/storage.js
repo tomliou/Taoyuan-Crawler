@@ -32,27 +32,19 @@ async function batchWrite(db, collectionName, records, season) {
 }
 
 /**
- * 儲存爬蟲結果到 Firestore
+ * 儲存爬蟲結果到 Firestore（只儲存預售屋資料）
  */
 export async function saveToFirestore(crawlResult) {
   const db = initFirebase();
-  const { season, buySell, preSale, rent } = crawlResult;
+  const { season, preSale } = crawlResult;
   
   console.log('\n=== 開始寫入 Firestore ===');
   
   const summary = {
     season,
-    buySellCount: 0,
     preSaleCount: 0,
-    rentCount: 0,
     updatedAt: new Date(),
   };
-  
-  // 寫入買賣資料
-  if (buySell.length > 0) {
-    console.log(`\n寫入買賣資料 (${buySell.length} 筆)...`);
-    summary.buySellCount = await batchWrite(db, CONFIG.COLLECTIONS.BUY_SELL, buySell, season);
-  }
   
   // 寫入預售屋資料
   if (preSale.length > 0) {
@@ -60,19 +52,11 @@ export async function saveToFirestore(crawlResult) {
     summary.preSaleCount = await batchWrite(db, CONFIG.COLLECTIONS.PRE_SALE, preSale, season);
   }
   
-  // 寫入租賃資料
-  if (rent.length > 0) {
-    console.log(`\n寫入租賃資料 (${rent.length} 筆)...`);
-    summary.rentCount = await batchWrite(db, CONFIG.COLLECTIONS.RENT, rent, season);
-  }
-  
   // 更新爬蟲執行紀錄
   await db.collection('crawlerLogs').doc(season).set(summary);
   
   console.log('\n=== 寫入完成 ===');
-  console.log(`買賣: ${summary.buySellCount} 筆`);
   console.log(`預售屋: ${summary.preSaleCount} 筆`);
-  console.log(`租賃: ${summary.rentCount} 筆`);
   
   return summary;
 }

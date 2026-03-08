@@ -6,18 +6,14 @@ export const CONFIG = {
   // 要抓取的縣市代碼
   CITY_CODE: 'H',  // H = 桃園市
   
-  // 交易類型
+  // 交易類型（只爬取預售屋）
   TRANSACTION_TYPES: {
-    BUY_SELL: 'a',      // 不動產買賣
     PRE_SALE: 'b',      // 預售屋買賣
-    RENT: 'c',          // 不動產租賃
   },
   
   // Firestore 集合名稱
   COLLECTIONS: {
-    BUY_SELL: 'realEstate_buySell',
-    PRE_SALE: 'realEstate_preSale', 
-    RENT: 'realEstate_rent',
+    PRE_SALE: 'realEstate_preSale',
   },
 };
 

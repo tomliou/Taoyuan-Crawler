@@ -3,3 +3,4 @@ node_modules/
 *.log
 downloads/
 serviceAccountKey.json
+firebase-service-account.json
