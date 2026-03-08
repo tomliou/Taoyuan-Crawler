@@ -1,0 +1,40 @@
+name: 實價登錄爬蟲
+
+on:
+  # 定時執行：每月 12 日和 22 日早上 9 點（UTC+8 = UTC 1:00）
+  schedule:
+    - cron: '0 1 12 * *'
+    - cron: '0 1 22 * *'
+  
+  # 手動觸發
+  workflow_dispatch:
+    inputs:
+      season:
+        description: '指定季度（例如 113S4），留空則自動判斷'
+        required: false
+        default: ''
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run crawler
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: npm run crawl
+
+      - name: Summary
+        run: echo "爬蟲執行完成！請到 Firebase Console 查看資料。"

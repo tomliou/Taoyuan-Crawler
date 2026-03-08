@@ -1,0 +1,16 @@
+{
+  "name": "taoyuan-crawler",
+  "version": "1.0.0",
+  "description": "桃園市實價登錄資料爬蟲",
+  "type": "module",
+  "scripts": {
+    "crawl": "node src/index.js",
+    "test": "node src/index.js --test"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "csv-parse": "^5.5.0",
+    "node-fetch": "^3.3.0",
+    "adm-zip": "^0.5.10"
+  }
+}
