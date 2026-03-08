@@ -2,29 +2,42 @@ import { initFirebase } from './firebase.js';
 import { CONFIG } from './config.js';
 
 /**
- * 批次寫入 Firestore
- * Firestore 單次批次最多 500 筆，這裡分批處理
+ * 批次寫入 Firestore（並行處理加速）
+ * Firestore 單次批次最多 500 筆，這裡分批並行處理
  */
 async function batchWrite(db, collectionName, records, season) {
-  const BATCH_SIZE = 400;
+  const BATCH_SIZE = 500;
+  const PARALLEL_BATCHES = 5; // 同時執行的批次數
+  
+  const chunks = [];
+  for (let i = 0; i < records.length; i += BATCH_SIZE) {
+    chunks.push(records.slice(i, i + BATCH_SIZE));
+  }
+  
   let totalWritten = 0;
   
-  for (let i = 0; i < records.length; i += BATCH_SIZE) {
-    const batch = db.batch();
-    const chunk = records.slice(i, i + BATCH_SIZE);
+  // 並行處理多個批次
+  for (let i = 0; i < chunks.length; i += PARALLEL_BATCHES) {
+    const parallelChunks = chunks.slice(i, i + PARALLEL_BATCHES);
     
-    for (const record of chunk) {
-      // 用 serialNumber + season 作為文件 ID，避免重複
-      const docId = `${season}_${record.serialNumber || Date.now() + Math.random()}`;
-      const docRef = db.collection(collectionName).doc(docId);
-      batch.set(docRef, {
-        ...record,
-        season,
-      }, { merge: true });
-    }
+    const promises = parallelChunks.map(async (chunk) => {
+      const batch = db.batch();
+      
+      for (const record of chunk) {
+        const docId = `${season}_${record.serialNumber || Date.now() + Math.random()}`;
+        const docRef = db.collection(collectionName).doc(docId);
+        batch.set(docRef, {
+          ...record,
+          season,
+        }, { merge: true });
+      }
+      
+      await batch.commit();
+      return chunk.length;
+    });
     
-    await batch.commit();
-    totalWritten += chunk.length;
+    const results = await Promise.all(promises);
+    totalWritten += results.reduce((a, b) => a + b, 0);
     console.log(`  已寫入 ${totalWritten}/${records.length} 筆到 ${collectionName}`);
   }
   
