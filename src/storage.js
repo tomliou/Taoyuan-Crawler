@@ -2,27 +2,28 @@ import { initFirebase } from './firebase.js';
 import { CONFIG } from './config.js';
 
 /**
- * 批次寫入 Firestore（並行處理加速）
- * Firestore 單次批次最多 500 筆，這裡分批並行處理
+ * 延遲函數
+ */
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * 批次寫入 Firestore
  */
 async function batchWrite(db, collectionName, records, season) {
-  const BATCH_SIZE = 500;
-  const PARALLEL_BATCHES = 5; // 同時執行的批次數
-  
-  const chunks = [];
-  for (let i = 0; i < records.length; i += BATCH_SIZE) {
-    chunks.push(records.slice(i, i + BATCH_SIZE));
-  }
-  
+  const BATCH_SIZE = 50; // 每批 50 筆
   let totalWritten = 0;
+  const totalBatches = Math.ceil(records.length / BATCH_SIZE);
   
-  // 並行處理多個批次
-  for (let i = 0; i < chunks.length; i += PARALLEL_BATCHES) {
-    const parallelChunks = chunks.slice(i, i + PARALLEL_BATCHES);
+  console.log(`  總共 ${totalBatches} 個批次，每批 ${BATCH_SIZE} 筆`);
+  
+  for (let i = 0; i < records.length; i += BATCH_SIZE) {
+    const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+    const batch = db.batch();
+    const chunk = records.slice(i, i + BATCH_SIZE);
     
-    const promises = parallelChunks.map(async (chunk) => {
-      const batch = db.batch();
-      
+    console.log(`  [${batchNum}/${totalBatches}] 寫入 ${chunk.length} 筆...`);
+    
+    try {
       for (const record of chunk) {
         const docId = `${season}_${record.serialNumber || Date.now() + Math.random()}`;
         const docRef = db.collection(collectionName).doc(docId);
@@ -32,13 +33,21 @@ async function batchWrite(db, collectionName, records, season) {
         }, { merge: true });
       }
       
+      const startTime = Date.now();
       await batch.commit();
-      return chunk.length;
-    });
-    
-    const results = await Promise.all(promises);
-    totalWritten += results.reduce((a, b) => a + b, 0);
-    console.log(`  已寫入 ${totalWritten}/${records.length} 筆到 ${collectionName}`);
+      const elapsed = Date.now() - startTime;
+      
+      totalWritten += chunk.length;
+      console.log(`  [${batchNum}/${totalBatches}] ✅ (${elapsed}ms) 累計 ${totalWritten}/${records.length} 筆`);
+      
+      // 每批之間稍微延遲，避免觸發限流
+      if (i + BATCH_SIZE < records.length) {
+        await delay(100);
+      }
+    } catch (error) {
+      console.error(`  [${batchNum}/${totalBatches}] ❌ 失敗:`, error.message);
+      throw error;
+    }
   }
   
   return totalWritten;
