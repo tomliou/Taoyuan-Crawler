@@ -58,23 +58,10 @@ node src/index.js --season=113S4
 |------|-------|
 | `FIREBASE_SERVICE_ACCOUNT` | Firebase 服務帳戶 JSON（完整內容） |
 
-## 資料欄位說明
+## 資料欄位對照
 
-### 預售屋資料 (realEstate_preSale)
-
-| 欄位 | 說明 |
-|------|------|
-| district | 鄉鎮市區 |
-| buildingName | 建案名稱 |
-| address | 土地位置建物門牌 |
-| landArea | 土地面積（平方公尺） |
-| buildingArea | 建物面積（平方公尺） |
-| totalPrice | 總價（元） |
-| unitPrice | 單價（元/平方公尺） |
-| transactionDate | 交易日期（民國年月日） |
-| note | 備註 |
-| serialNumber | 編號 |
-| season | 資料季度（如 113S4） |
+Excel / CSV 表頭與 Data 英文欄位對照、型別說明請見獨立文件：  
+**[docs/field-mapping.md](docs/field-mapping.md)**
 
 ## License
 

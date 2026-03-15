@@ -1,6 +1,11 @@
 name: 實價登錄爬蟲
 
 on:
+  # Push 到 main 時執行（CI/CD）
+  push:
+    branches:
+      - main
+  
   # 定時執行：每月 12 日和 22 日早上 9 點（UTC+8 = UTC 1:00）
   schedule:
     - cron: '0 1 12 * *'

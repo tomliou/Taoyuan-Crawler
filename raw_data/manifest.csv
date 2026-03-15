@@ -1,0 +1,4 @@
+name,schema,description
+h_lvr_land_b.xls,schema-main-sale.csv,桃園市預售屋買賣
+h_lvr_land_b_park.xls,schema-park.csv,桃園市停車場預售屋買賣
+h_lvr_land_b_land.xls,schema-land.csv,桃園市土地預售屋買賣
